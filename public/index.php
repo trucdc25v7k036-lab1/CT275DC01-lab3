@@ -5,9 +5,9 @@ require_once __DIR__ . '/../src/bootstrap.php';
 use CT275\Labs\Contact;
 use CT275\Labs\Paginator;
 
-$contact = new Contact($PDO);
+$contactModel = new Contact($PDO);
 
-// Số bản ghi trên mỗi trang
+// Số contact trên mỗi trang
 $limit = isset($_GET['limit']) && is_numeric($_GET['limit'])
     ? (int) $_GET['limit']
     : 5;
@@ -30,17 +30,17 @@ if ($page < 1) {
 // Tạo Paginator
 $paginator = new Paginator(
     $limit,
-    $contact->count(),
+    $contactModel->count(),
     $page
 );
 
 // Lấy contacts theo trang
-$contacts = $contact->paginate(
+$contacts = $contactModel->paginate(
     $paginator->recordOffset,
     $paginator->recordsPerPage
 );
 
-// Lấy danh sách các trang
+// Lấy danh sách trang
 $pages = $paginator->getPages(3);
 
 include_once __DIR__ . '/../src/partials/header.php';
@@ -48,10 +48,10 @@ include_once __DIR__ . '/../src/partials/header.php';
 
 <body>
 
-  <?php include_once __DIR__ . '/../src/partials/navbar.php'; ?>
+<?php include_once __DIR__ . '/../src/partials/navbar.php'; ?>
 
-  <!-- Main Page Content -->
-  <div class="container">
+<!-- Main Page Content -->
+<div class="container">
 
     <?php
     $subtitle = 'View your all contacts here.';
@@ -59,308 +59,457 @@ include_once __DIR__ . '/../src/partials/header.php';
     ?>
 
     <div class="row">
-      <div class="col-12">
+        <div class="col-12">
 
-        <!-- New Contact -->
-        <a
-          href="/add.php"
-          class="btn btn-primary mb-3"
-        >
-          <i class="fa fa-plus"></i>
-          New Contact
-        </a>
+            <!-- New Contact -->
+            <a
+                href="/add.php"
+                class="btn btn-primary mb-3"
+            >
+                <i class="fa fa-plus"></i>
+                New Contact
+            </a>
 
-        <!-- Table Starts Here -->
-        <table
-          id="contacts"
-          class="table table-striped table-bordered"
-        >
 
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Phone</th>
-              <th scope="col">Date Created</th>
-              <th scope="col">Notes</th>
-              <th scope="col">Actions</th>
-            </tr>
-          </thead>
+            <!-- ========================= -->
+            <!-- CONTACT TABLE -->
+            <!-- ========================= -->
 
-          <tbody>
+            <table
+                id="contacts"
+                class="table table-striped table-bordered align-middle"
+            >
 
-            <?php foreach ($contacts as $contact) : ?>
+                <thead>
+                    <tr>
 
-              <tr>
+                        <th scope="col">
+                            Avatar
+                        </th>
 
-                <!-- Name -->
-                <td>
-                  <?= html_escape($contact->name) ?>
-                </td>
+                        <th scope="col">
+                            Name
+                        </th>
 
-                <!-- Phone -->
-                <td>
-                  <?= html_escape($contact->phone) ?>
-                </td>
+                        <th scope="col">
+                            Phone
+                        </th>
 
-                <!-- Date Created -->
-                <td>
-                  <?= html_escape(
-                    date(
-                      'd-m-Y',
-                      strtotime($contact->created_at)
-                    )
-                  ) ?>
-                </td>
+                        <th scope="col">
+                            Date Created
+                        </th>
 
-                <!-- Notes -->
-                <td>
-                  <?= html_escape($contact->notes) ?>
-                </td>
+                        <th scope="col">
+                            Notes
+                        </th>
 
-                <!-- Actions -->
-                <td class="d-flex justify-content-center">
+                        <th scope="col">
+                            Actions
+                        </th>
 
-                  <!-- Edit -->
-                  <a
-                    href="/edit.php?id=<?= $contact->id ?>"
-                    class="btn btn-xs btn-warning me-1"
-                    title="Edit"
-                  >
-                    <i class="fa fa-pencil"></i>
-                    Edit
-                  </a>
+                    </tr>
+                </thead>
 
-                  <!-- Delete -->
-                  <form
-                    class="ms-1"
-                    action="/delete.php"
-                    method="POST"
-                  >
 
-                    <input
-                      type="hidden"
-                      name="id"
-                      value="<?= $contact->id ?>"
+                <tbody>
+
+                <?php if (empty($contacts)) : ?>
+
+                    <tr>
+                        <td
+                            colspan="6"
+                            class="text-center"
+                        >
+                            No contacts found.
+                        </td>
+                    </tr>
+
+                <?php else : ?>
+
+                    <?php foreach ($contacts as $contact) : ?>
+
+                        <tr>
+
+                            <!-- ========================= -->
+                            <!-- AVATAR -->
+                            <!-- ========================= -->
+
+                            <td>
+
+                                <?php if (!empty($contact->avatar)) : ?>
+
+                                    <img
+                                        src="<?= html_escape($contact->avatar) ?>"
+                                        alt="Avatar"
+                                        width="60"
+                                        height="60"
+                                        style="
+                                            width: 60px;
+                                            height: 60px;
+                                            object-fit: cover;
+                                            border-radius: 50%;
+                                            border: 1px solid #ddd;
+                                        "
+                                    >
+
+                                <?php else : ?>
+
+                                    <!-- Avatar mặc định -->
+                                    <div
+                                        style="
+                                            width: 60px;
+                                            height: 60px;
+                                            border-radius: 50%;
+                                            background-color: #e9ecef;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            color: #6c757d;
+                                            font-size: 24px;
+                                        "
+                                    >
+                                        <i class="fa fa-user"></i>
+                                    </div>
+
+                                <?php endif; ?>
+
+                            </td>
+
+
+                            <!-- ========================= -->
+                            <!-- NAME -->
+                            <!-- ========================= -->
+
+                            <td>
+                                <?= html_escape($contact->name) ?>
+                            </td>
+
+
+                            <!-- ========================= -->
+                            <!-- PHONE -->
+                            <!-- ========================= -->
+
+                            <td>
+                                <?= html_escape($contact->phone) ?>
+                            </td>
+
+
+                            <!-- ========================= -->
+                            <!-- DATE CREATED -->
+                            <!-- ========================= -->
+
+                            <td>
+
+                                <?= html_escape(
+                                    date(
+                                        'd-m-Y',
+                                        strtotime($contact->created_at)
+                                    )
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- ========================= -->
+                            <!-- NOTES -->
+                            <!-- ========================= -->
+
+                            <td>
+                                <?= html_escape($contact->notes) ?>
+                            </td>
+
+
+                            <!-- ========================= -->
+                            <!-- ACTIONS -->
+                            <!-- ========================= -->
+
+                            <td>
+
+                                <div
+                                    class="d-flex justify-content-center"
+                                >
+
+                                    <!-- Edit -->
+                                    <a
+                                        href="/edit.php?id=<?= $contact->id ?>"
+                                        class="btn btn-sm btn-warning me-1"
+                                        title="Edit"
+                                    >
+                                        <i class="fa fa-pencil"></i>
+                                        Edit
+                                    </a>
+
+
+                                    <!-- Delete -->
+                                    <form
+                                        action="/delete.php"
+                                        method="POST"
+                                        class="ms-1"
+                                    >
+
+                                        <input
+                                            type="hidden"
+                                            name="id"
+                                            value="<?= $contact->id ?>"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm btn-danger"
+                                            name="delete-contact"
+                                            title="Delete"
+                                        >
+                                            <i class="fa fa-trash"></i>
+                                            Delete
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                <?php endif; ?>
+
+                </tbody>
+
+            </table>
+
+
+            <!-- ========================= -->
+            <!-- PAGINATION -->
+            <!-- ========================= -->
+
+            <nav class="d-flex justify-content-center">
+
+                <ul class="pagination">
+
+                    <?php
+                    $prevPage = $paginator->getPrevPage();
+                    ?>
+
+                    <!-- Previous -->
+                    <li
+                        class="page-item <?= $prevPage === false ? 'disabled' : '' ?>"
                     >
 
-                    <button
-                      type="submit"
-                      class="btn btn-xs btn-danger"
-                      name="delete-contact"
-                      title="Delete"
+                        <a
+                            class="page-link"
+                            href="/?page=<?= $prevPage ?: 1 ?>&limit=<?= $limit ?>"
+                        >
+                            <span>&laquo;</span>
+                        </a>
+
+                    </li>
+
+
+                    <!-- Page Numbers -->
+                    <?php foreach ($pages as $pageNumber) : ?>
+
+                        <li
+                            class="page-item
+                            <?= $paginator->currentPage === $pageNumber
+                                ? 'active'
+                                : '' ?>"
+                        >
+
+                            <a
+                                class="page-link"
+                                href="/?page=<?= $pageNumber ?>&limit=<?= $limit ?>"
+                            >
+                                <?= $pageNumber ?>
+                            </a>
+
+                        </li>
+
+                    <?php endforeach; ?>
+
+
+                    <?php
+                    $nextPage = $paginator->getNextPage();
+                    ?>
+
+                    <!-- Next -->
+                    <li
+                        class="page-item <?= $nextPage === false ? 'disabled' : '' ?>"
                     >
-                      <i class="fa fa-trash"></i>
-                      Delete
-                    </button>
 
-                  </form>
+                        <a
+                            class="page-link"
+                            href="/?page=<?= $nextPage ?: $paginator->currentPage ?>&limit=<?= $limit ?>"
+                        >
+                            <span>&raquo;</span>
+                        </a>
 
-                </td>
+                    </li>
 
-              </tr>
+                </ul>
 
-            <?php endforeach; ?>
+            </nav>
 
-          </tbody>
-
-        </table>
-        <!-- Table Ends Here -->
-
-
-        <!-- Pagination -->
-        <nav class="d-flex justify-content-center">
-
-          <ul class="pagination">
-
-            <!-- Previous -->
-            <li class="page-item">
-
-              <?php
-              $prevPage = $paginator->getPrevPage();
-              ?>
-
-              <a
-                role="button"
-                href="/?page=<?= $prevPage ?: 1 ?>&limit=<?= $limit ?>"
-                class="page-link"
-                <?= $prevPage === false ? 'aria-disabled="true"' : '' ?>
-              >
-                <span>&laquo;</span>
-              </a>
-
-            </li>
-
-
-            <!-- Page Numbers -->
-            <?php foreach ($pages as $pageNumber) : ?>
-
-              <li
-                class="page-item <?= $paginator->currentPage === $pageNumber ? 'active' : '' ?>"
-              >
-
-                <a
-                  role="button"
-                  href="/?page=<?= $pageNumber ?>&limit=<?= $limit ?>"
-                  class="page-link"
-                >
-                  <?= $pageNumber ?>
-                </a>
-
-              </li>
-
-            <?php endforeach; ?>
-
-
-            <!-- Next -->
-            <li class="page-item">
-
-              <?php
-              $nextPage = $paginator->getNextPage();
-              ?>
-
-              <a
-                role="button"
-                href="/?page=<?= $nextPage ?: $paginator->currentPage ?>&limit=<?= $limit ?>"
-                class="page-link"
-                <?= $nextPage === false ? 'aria-disabled="true"' : '' ?>
-              >
-                <span>&raquo;</span>
-              </a>
-
-            </li>
-
-          </ul>
-
-        </nav>
-        <!-- End Pagination -->
-
-      </div>
+        </div>
     </div>
 
-  </div>
+</div>
 
 
-  <!-- Delete Confirmation Modal -->
-  <div
+<!-- ========================= -->
+<!-- DELETE CONFIRMATION MODAL -->
+<!-- ========================= -->
+
+<div
     id="delete-confirm"
     class="modal fade"
     tabindex="-1"
-  >
+>
 
     <div class="modal-dialog">
 
-      <div class="modal-content">
+        <div class="modal-content">
 
-        <div class="modal-header">
+            <div class="modal-header">
 
-          <h4 class="modal-title">
-            Confirmation
-          </h4>
+                <h4 class="modal-title">
+                    Confirmation
+                </h4>
 
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-          >
-          </button>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                >
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+                Do you want to delete this contact?
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    data-bs-dismiss="modal"
+                    class="btn btn-danger"
+                    id="delete"
+                >
+                    Delete
+                </button>
+
+                <button
+                    type="button"
+                    data-bs-dismiss="modal"
+                    class="btn btn-secondary"
+                >
+                    Cancel
+                </button>
+
+            </div>
 
         </div>
-
-        <div class="modal-body">
-          Do you want to delete this contact?
-        </div>
-
-        <div class="modal-footer">
-
-          <button
-            type="button"
-            data-bs-dismiss="modal"
-            class="btn btn-danger"
-            id="delete"
-          >
-            Delete
-          </button>
-
-          <button
-            type="button"
-            data-bs-dismiss="modal"
-            class="btn btn-default"
-          >
-            Cancel
-          </button>
-
-        </div>
-
-      </div>
 
     </div>
 
-  </div>
+</div>
 
 
-  <?php include_once __DIR__ . '/../src/partials/footer.php'; ?>
+<?php include_once __DIR__ . '/../src/partials/footer.php'; ?>
 
 
-  <script>
+<!-- ========================= -->
+<!-- DELETE CONFIRMATION SCRIPT -->
+<!-- ========================= -->
 
-    // Lấy tất cả các nút Delete
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
     const deleteButtons = document.querySelectorAll(
-      'button[name="delete-contact"]'
+        'button[name="delete-contact"]'
     );
 
-    deleteButtons.forEach(button => {
+    const modalElement =
+        document.getElementById('delete-confirm');
 
-      button.addEventListener('click', function (e) {
+    const deleteModal =
+        new bootstrap.Modal(modalElement);
 
-        // Không submit form ngay lập tức
-        e.preventDefault();
+    const confirmDeleteButton =
+        document.getElementById('delete');
 
-        // Lấy form chứa nút Delete
-        const form = button.closest('form');
+    let selectedForm = null;
 
-        // Lấy id contact
-        const nameTd = button
-          .closest('tr')
-          .querySelector('td:first-child');
 
-        if (nameTd) {
+    deleteButtons.forEach(function (button) {
 
-          document.querySelector('.modal-body').textContent =
-            `Do you want to delete "${nameTd.textContent.trim()}"?`;
+        button.addEventListener('click', function (event) {
 
-        }
+            // Không submit ngay
+            event.preventDefault();
 
-        // Hàm submit form
-        const submitForm = function () {
-          form.submit();
-        };
+            // Lấy form
+            selectedForm =
+                button.closest('form');
 
-        // Nút Delete trong modal
-        document
-          .getElementById('delete')
-          .addEventListener('click', submitForm, {
-            once: true
-          });
 
-        // Modal
-        const modalEl = document.getElementById('delete-confirm');
+            // Lấy tên contact
+            const row =
+                button.closest('tr');
 
-        const confirmModal = new bootstrap.Modal(
-          modalEl,
-          {
-            backdrop: 'static',
-            keyboard: false
-          }
-        );
+            const nameCell =
+                row.querySelector(
+                    'td:nth-child(2)'
+                );
 
-        // Hiện modal
-        confirmModal.show();
 
-      });
+            if (nameCell) {
+
+                modalElement
+                    .querySelector('.modal-body')
+                    .textContent =
+                    'Do you want to delete "'
+                    + nameCell.textContent.trim()
+                    + '"?';
+
+            }
+
+
+            // Hiển thị modal
+            deleteModal.show();
+
+        });
 
     });
 
-  </script>
+
+    /*
+     * Xác nhận Delete
+     */
+    confirmDeleteButton.addEventListener(
+        'click',
+        function () {
+
+            if (selectedForm) {
+
+                selectedForm.submit();
+
+                selectedForm = null;
+
+            }
+
+        }
+    );
+
+});
+
+</script>
 
 </body>
 
