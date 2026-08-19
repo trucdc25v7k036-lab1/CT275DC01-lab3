@@ -34,6 +34,7 @@ class Contact
         $errors = [];
 
         $name = trim($data['name'] ?? '');
+
         if (!$name) {
             $errors['name'] = 'Invalid name.';
         }
@@ -48,6 +49,7 @@ class Contact
         }
 
         $notes = trim($data['notes'] ?? '');
+
         if (strlen($notes) > 255) {
             $errors['notes'] = 'Notes must be at most 255 characters.';
         }
@@ -84,5 +86,47 @@ class Contact
         $this->updated_at = $row['updated_at'];
 
         return $this;
+    }
+
+    public function count(): int
+    {
+        $statement = $this->db->prepare(
+            'select count(*) from contacts'
+        );
+
+        $statement->execute();
+
+        return (int) $statement->fetchColumn();
+    }
+
+    public function paginate(int $offset = 0, int $limit = 10): array
+    {
+        $contacts = [];
+
+        $statement = $this->db->prepare(
+            'select * from contacts limit :limit offset :offset'
+        );
+
+        $statement->bindValue(
+            ':offset',
+            $offset,
+            PDO::PARAM_INT
+        );
+
+        $statement->bindValue(
+            ':limit',
+            $limit,
+            PDO::PARAM_INT
+        );
+
+        $statement->execute();
+
+        while ($row = $statement->fetch()) {
+            $contact = new Contact($this->db);
+            $contact->fillFromDbRow($row);
+            $contacts[] = $contact;
+        }
+
+        return $contacts;
     }
 }
