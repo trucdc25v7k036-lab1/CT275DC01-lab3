@@ -5,9 +5,10 @@ require_once __DIR__ . '/../src/bootstrap.php';
 use CT275\Labs\Contact;
 use CT275\Labs\Paginator;
 
+// Khởi tạo Contact
 $contact = new Contact($PDO);
 
-// Số bản ghi trên mỗi trang
+// Số contact hiển thị trên mỗi trang
 $limit = isset($_GET['limit']) && is_numeric($_GET['limit'])
     ? (int) $_GET['limit']
     : 5;
@@ -17,25 +18,30 @@ $page = isset($_GET['page']) && is_numeric($_GET['page'])
     ? (int) $_GET['page']
     : 1;
 
-// Không cho limit nhỏ hơn 1
+// Không cho phép limit nhỏ hơn 1
 if ($limit < 1) {
     $limit = 5;
 }
 
-// Tạo paginator
+// Không cho phép page nhỏ hơn 1
+if ($page < 1) {
+    $page = 1;
+}
+
+// Tạo Paginator
 $paginator = new Paginator(
     $limit,
     $contact->count(),
     $page
 );
 
-// Lấy contacts theo trang
+// Lấy danh sách contact theo trang
 $contacts = $contact->paginate(
     $paginator->recordOffset,
     $paginator->recordsPerPage
 );
 
-// Danh sách các trang
+// Lấy danh sách số trang
 $pages = $paginator->getPages(3);
 
 include_once __DIR__ . '/../src/partials/header.php';
@@ -43,25 +49,33 @@ include_once __DIR__ . '/../src/partials/header.php';
 
 <body>
 
-  <?php include_once __DIR__ . '/../src/partials/navbar.php' ?>
+  <?php include_once __DIR__ . '/../src/partials/navbar.php'; ?>
 
   <!-- Main Page Content -->
   <div class="container">
 
     <?php
-    $subtitle = 'View your all contacs here.';
+    $subtitle = 'View your all contacts here.';
     include_once __DIR__ . '/../src/partials/heading.php';
     ?>
 
     <div class="row">
       <div class="col-12">
 
-        <a href="/add.php" class="btn btn-primary mb-3">
-          <i class="fa fa-plus"></i> New Contact
+        <!-- Add Contact -->
+        <a
+          href="/add.php"
+          class="btn btn-primary mb-3"
+        >
+          <i class="fa fa-plus"></i>
+          New Contact
         </a>
 
         <!-- Table Starts Here -->
-        <table id="contacts" class="table table-striped table-bordered">
+        <table
+          id="contacts"
+          class="table table-striped table-bordered"
+        >
 
           <thead>
             <tr>
@@ -75,18 +89,21 @@ include_once __DIR__ . '/../src/partials/header.php';
 
           <tbody>
 
-            <?php foreach ($contacts as $contact): ?>
+            <?php foreach ($contacts as $contact) : ?>
 
               <tr>
 
+                <!-- Name -->
                 <td>
                   <?= html_escape($contact->name) ?>
                 </td>
 
+                <!-- Phone -->
                 <td>
                   <?= html_escape($contact->phone) ?>
                 </td>
 
+                <!-- Date Created -->
                 <td>
                   <?= html_escape(
                     date(
@@ -96,12 +113,15 @@ include_once __DIR__ . '/../src/partials/header.php';
                   ) ?>
                 </td>
 
+                <!-- Notes -->
                 <td>
                   <?= html_escape($contact->notes) ?>
                 </td>
 
+                <!-- Actions -->
                 <td class="d-flex justify-content-center">
 
+                  <!-- Edit -->
                   <a
                     href="/edit.php?id=<?= $contact->id ?>"
                     class="btn btn-xs btn-warning me-1"
@@ -111,6 +131,7 @@ include_once __DIR__ . '/../src/partials/header.php';
                     Edit
                   </a>
 
+                  <!-- Delete -->
                   <a
                     href="/delete.php?id=<?= $contact->id ?>"
                     class="btn btn-xs btn-danger"
@@ -137,14 +158,18 @@ include_once __DIR__ . '/../src/partials/header.php';
 
           <ul class="pagination">
 
-            <!-- Previous -->
+            <!-- Previous Page -->
             <li class="page-item">
+
+              <?php
+              $prevPage = $paginator->getPrevPage();
+              ?>
 
               <a
                 role="button"
-                href="/?page=<?= $paginator->getPrevPage() ?: 1 ?>&limit=<?= $limit ?>"
+                href="/?page=<?= $prevPage ?: 1 ?>&limit=<?= $limit ?>"
                 class="page-link"
-                <?= $paginator->getPrevPage() === false ? 'aria-disabled="true"' : '' ?>
+                <?= $prevPage === false ? 'aria-disabled="true"' : '' ?>
               >
                 <span>&laquo;</span>
               </a>
@@ -153,7 +178,7 @@ include_once __DIR__ . '/../src/partials/header.php';
 
 
             <!-- Page Numbers -->
-            <?php foreach ($pages as $pageNumber): ?>
+            <?php foreach ($pages as $pageNumber) : ?>
 
               <li
                 class="page-item <?= $paginator->currentPage === $pageNumber ? 'active' : '' ?>"
@@ -172,14 +197,18 @@ include_once __DIR__ . '/../src/partials/header.php';
             <?php endforeach; ?>
 
 
-            <!-- Next -->
+            <!-- Next Page -->
             <li class="page-item">
+
+              <?php
+              $nextPage = $paginator->getNextPage();
+              ?>
 
               <a
                 role="button"
-                href="/?page=<?= $paginator->getNextPage() ?: $paginator->currentPage ?>&limit=<?= $limit ?>"
+                href="/?page=<?= $nextPage ?: $paginator->currentPage ?>&limit=<?= $limit ?>"
                 class="page-link"
-                <?= $paginator->getNextPage() === false ? 'aria-disabled="true"' : '' ?>
+                <?= $nextPage === false ? 'aria-disabled="true"' : '' ?>
               >
                 <span>&raquo;</span>
               </a>
@@ -193,11 +222,16 @@ include_once __DIR__ . '/../src/partials/header.php';
 
       </div>
     </div>
+
   </div>
 
 
   <!-- Delete Confirmation Modal -->
-  <div id="delete-confirm" class="modal fade" tabindex="-1">
+  <div
+    id="delete-confirm"
+    class="modal fade"
+    tabindex="-1"
+  >
 
     <div class="modal-dialog">
 
@@ -212,7 +246,8 @@ include_once __DIR__ . '/../src/partials/header.php';
           <button
             type="button"
             class="btn-close"
-            data-bs-dismiss="modal">
+            data-bs-dismiss="modal"
+          >
           </button>
 
         </div>
@@ -249,7 +284,7 @@ include_once __DIR__ . '/../src/partials/header.php';
   </div>
 
 
-  <?php include_once __DIR__ . '/../src/partials/footer.php' ?>
+  <?php include_once __DIR__ . '/../src/partials/footer.php'; ?>
 
   <script>
   </script>
