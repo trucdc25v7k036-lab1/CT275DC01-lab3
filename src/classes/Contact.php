@@ -129,4 +129,47 @@ class Contact
 
         return $contacts;
     }
+    public function save(): bool
+{
+    $result = false;
+
+    if ($this->id >= 0) {
+        // Cập nhật contact đã tồn tại
+        $statement = $this->db->prepare(
+            'UPDATE contacts
+             SET name = :name,
+                 phone = :phone,
+                 notes = :notes,
+                 updated_at = now()
+             WHERE id = :id'
+        );
+
+        $result = $statement->execute([
+            'name' => $this->name,
+            'phone' => $this->phone,
+            'notes' => $this->notes,
+            'id' => $this->id
+        ]);
+    } else {
+        // Thêm contact mới
+        $statement = $this->db->prepare(
+            'INSERT INTO contacts
+                (name, phone, notes, created_at, updated_at)
+             VALUES
+                (:name, :phone, :notes, now(), now())'
+        );
+
+        $result = $statement->execute([
+            'name' => $this->name,
+            'phone' => $this->phone,
+            'notes' => $this->notes
+        ]);
+
+        if ($result) {
+            $this->id = (int) $this->db->lastInsertId();
+        }
+    }
+
+    return $result;
+}
 }
