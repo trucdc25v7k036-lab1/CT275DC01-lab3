@@ -1,5 +1,11 @@
 <?php
+
 require_once __DIR__ . '/../src/bootstrap.php';
+
+use CT275\Labs\Contact;
+
+$contact = new Contact($PDO);
+$contacts = $contact->all();
 
 include_once __DIR__ . '/../src/partials/header.php';
 ?>
@@ -33,8 +39,47 @@ include_once __DIR__ . '/../src/partials/header.php';
               <th scope="col">Actions</th>
             </tr>
           </thead>
-          <tbody>
 
+          <tbody>
+            <?php foreach ($contacts as $contact): ?>
+              <tr>
+                <td>
+                  <?= html_escape($contact->name) ?>
+                </td>
+
+                <td>
+                  <?= html_escape($contact->phone) ?>
+                </td>
+
+                <td>
+                  <?= html_escape(
+                    date('d-m-Y', strtotime($contact->created_at))
+                  ) ?>
+                </td>
+
+                <td>
+                  <?= html_escape($contact->notes) ?>
+                </td>
+
+                <td class="d-flex justify-content-center">
+                  <a
+                    href="/edit.php?id=<?= $contact->id ?>"
+                    class="btn btn-xs btn-warning me-1"
+                    title="Edit"
+                  >
+                    <i class="fa fa-pencil"></i> Edit
+                  </a>
+
+                  <a
+                    href="/delete.php?id=<?= $contact->id ?>"
+                    class="btn btn-xs btn-danger"
+                    title="Delete"
+                  >
+                    <i class="fa fa-trash"></i> Delete
+                  </a>
+                </td>
+              </tr>
+            <?php endforeach; ?>
           </tbody>
         </table>
         <!-- Table Ends Here -->
@@ -47,15 +92,19 @@ include_once __DIR__ . '/../src/partials/header.php';
                 <span>&laquo;</span>
               </a>
             </li>
+
             <li class="page-item">
               <a role="button" class="page-link">1</a>
             </li>
+
             <li class="page-item active">
               <a role="button" class="page-link">2</a>
             </li>
+
             <li class="page-item">
               <a role="button" class="page-link">3</a>
             </li>
+
             <li class="page-item">
               <a role="button" class="page-link">
                 <span>&raquo;</span>
@@ -63,6 +112,7 @@ include_once __DIR__ . '/../src/partials/header.php';
             </li>
           </ul>
         </nav>
+
       </div>
     </div>
   </div>
@@ -70,23 +120,48 @@ include_once __DIR__ . '/../src/partials/header.php';
   <div id="delete-confirm" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
+
         <div class="modal-header">
           <h4 class="modal-title">Confirmation</h4>
-          <button type="button" class="btn-close" data-bs-dismiss="modal">
+
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal">
           </button>
         </div>
-        <div class="modal-body">Do you want to delete this contact?</div>
+
+        <div class="modal-body">
+          Do you want to delete this contact?
+        </div>
+
         <div class="modal-footer">
-          <button type="button" data-bs-dismiss="modal" class="btn btn-danger" id="delete">Delete</button>
-          <button type="button" data-bs-dismiss="modal" class="btn btn-default">Cancel</button>
+
+          <button
+            type="button"
+            data-bs-dismiss="modal"
+            class="btn btn-danger"
+            id="delete">
+            Delete
+          </button>
+
+          <button
+            type="button"
+            data-bs-dismiss="modal"
+            class="btn btn-default">
+            Cancel
+          </button>
+
         </div>
       </div>
     </div>
   </div>
 
   <?php include_once __DIR__ . '/../src/partials/footer.php' ?>
+
   <script>
   </script>
+
 </body>
 
 </html>
