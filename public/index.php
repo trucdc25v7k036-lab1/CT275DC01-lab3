@@ -5,10 +5,9 @@ require_once __DIR__ . '/../src/bootstrap.php';
 use CT275\Labs\Contact;
 use CT275\Labs\Paginator;
 
-// Khởi tạo Contact
 $contact = new Contact($PDO);
 
-// Số contact hiển thị trên mỗi trang
+// Số bản ghi trên mỗi trang
 $limit = isset($_GET['limit']) && is_numeric($_GET['limit'])
     ? (int) $_GET['limit']
     : 5;
@@ -18,12 +17,12 @@ $page = isset($_GET['page']) && is_numeric($_GET['page'])
     ? (int) $_GET['page']
     : 1;
 
-// Không cho phép limit nhỏ hơn 1
+// Kiểm tra limit
 if ($limit < 1) {
     $limit = 5;
 }
 
-// Không cho phép page nhỏ hơn 1
+// Kiểm tra page
 if ($page < 1) {
     $page = 1;
 }
@@ -35,13 +34,13 @@ $paginator = new Paginator(
     $page
 );
 
-// Lấy danh sách contact theo trang
+// Lấy contacts theo trang
 $contacts = $contact->paginate(
     $paginator->recordOffset,
     $paginator->recordsPerPage
 );
 
-// Lấy danh sách số trang
+// Lấy danh sách các trang
 $pages = $paginator->getPages(3);
 
 include_once __DIR__ . '/../src/partials/header.php';
@@ -62,7 +61,7 @@ include_once __DIR__ . '/../src/partials/header.php';
     <div class="row">
       <div class="col-12">
 
-        <!-- Add Contact -->
+        <!-- New Contact -->
         <a
           href="/add.php"
           class="btn btn-primary mb-3"
@@ -132,14 +131,29 @@ include_once __DIR__ . '/../src/partials/header.php';
                   </a>
 
                   <!-- Delete -->
-                  <a
-                    href="/delete.php?id=<?= $contact->id ?>"
-                    class="btn btn-xs btn-danger"
-                    title="Delete"
+                  <form
+                    class="ms-1"
+                    action="/delete.php"
+                    method="POST"
                   >
-                    <i class="fa fa-trash"></i>
-                    Delete
-                  </a>
+
+                    <input
+                      type="hidden"
+                      name="id"
+                      value="<?= $contact->id ?>"
+                    >
+
+                    <button
+                      type="submit"
+                      class="btn btn-xs btn-danger"
+                      name="delete-contact"
+                      title="Delete"
+                    >
+                      <i class="fa fa-trash"></i>
+                      Delete
+                    </button>
+
+                  </form>
 
                 </td>
 
@@ -158,7 +172,7 @@ include_once __DIR__ . '/../src/partials/header.php';
 
           <ul class="pagination">
 
-            <!-- Previous Page -->
+            <!-- Previous -->
             <li class="page-item">
 
               <?php
@@ -197,7 +211,7 @@ include_once __DIR__ . '/../src/partials/header.php';
             <?php endforeach; ?>
 
 
-            <!-- Next Page -->
+            <!-- Next -->
             <li class="page-item">
 
               <?php
@@ -286,7 +300,66 @@ include_once __DIR__ . '/../src/partials/header.php';
 
   <?php include_once __DIR__ . '/../src/partials/footer.php'; ?>
 
+
   <script>
+
+    // Lấy tất cả các nút Delete
+    const deleteButtons = document.querySelectorAll(
+      'button[name="delete-contact"]'
+    );
+
+    deleteButtons.forEach(button => {
+
+      button.addEventListener('click', function (e) {
+
+        // Không submit form ngay lập tức
+        e.preventDefault();
+
+        // Lấy form chứa nút Delete
+        const form = button.closest('form');
+
+        // Lấy id contact
+        const nameTd = button
+          .closest('tr')
+          .querySelector('td:first-child');
+
+        if (nameTd) {
+
+          document.querySelector('.modal-body').textContent =
+            `Do you want to delete "${nameTd.textContent.trim()}"?`;
+
+        }
+
+        // Hàm submit form
+        const submitForm = function () {
+          form.submit();
+        };
+
+        // Nút Delete trong modal
+        document
+          .getElementById('delete')
+          .addEventListener('click', submitForm, {
+            once: true
+          });
+
+        // Modal
+        const modalEl = document.getElementById('delete-confirm');
+
+        const confirmModal = new bootstrap.Modal(
+          modalEl,
+          {
+            backdrop: 'static',
+            keyboard: false
+          }
+        );
+
+        // Hiện modal
+        confirmModal.show();
+
+      });
+
+    });
+
   </script>
 
 </body>
